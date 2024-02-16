@@ -1,4 +1,4 @@
-# fluent-plugin-parser-winevt_xml
+# fluent-plugin-parser-winevtx-xml-nxt
 
 [![Build status](https://ci.appveyor.com/api/projects/status/eb0capv0q70u381f/branch/master?svg=true)](https://ci.appveyor.com/project/fluent/fluent-plugin-parser-winevt-xml/branch/master)
 [![Build Status](https://travis-ci.org/fluent/fluent-plugin-parser-winevt_xml.svg?branch=master)](https://travis-ci.org/fluent/fluent-plugin-parser-winevt_xml)
@@ -12,16 +12,16 @@
 ### Installation
 
 ```
-gem install fluent-plugin-parser-winevt_xml
+gem install fluent-plugin-parser-winevtx-xml-nxt
 ```
 
 ## Configuration
 
-### parser_winevt_xml
+### parser-winevtx-xml-nxt
 
 ```aconf
 <parse>
-  @type winevt_xml
+  @type winevtx-xml-nxt
   preserve_qualifiers true
 </parse>
 ```
@@ -30,13 +30,13 @@ gem install fluent-plugin-parser-winevt_xml
 
 Preserve Qualifiers key instead of calculating actual EventID with Qualifiers. Default is `true`.
 
-### parser_winevt_sax
+### parser-winevtx-sax-nxt
 
-This plugin is a bit faster than `winevt_xml`.
+This plugin is a bit faster than `winevtx-xml-nxt`.
 
 ```aconf
 <parse>
-  @type winevt_sax
+  @type winevtx-sax-nxt
   preserve_qualifiers true
 </parse>
 ```

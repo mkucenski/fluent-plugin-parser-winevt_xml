@@ -12,3 +12,4 @@ pkg/*
 *.o
 *.a
 mkmf.log
+*.gem

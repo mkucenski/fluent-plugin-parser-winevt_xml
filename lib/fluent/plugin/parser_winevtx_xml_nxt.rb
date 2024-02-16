@@ -9,6 +9,14 @@ module Fluent::Plugin
     config_param :system_prefix,   :string, default: "event"
     config_param :data_prefix,     :string, default: "eventData"
 
+    def configure(conf)
+      super
+
+      #      Sample:2024-02-16T18:07:30.284917000Z
+      @time_format = "%Y-%m-%dT%H:%M:%S.%NZ"
+      @time_parser = Fluent::TimeParser.new(@time_format, false, "UTC")
+    end
+
     def event_id(eventid_str, qualifiers_str = nil)
       #log.debug("WinevtXMLparser::event_id() " + eventid_str + ", " + qualifiers_str.to_s)
 
@@ -29,7 +37,8 @@ module Fluent::Plugin
       element_node = (xml_nodeset/element_name)
       # Only proceed if we're able to access the element w/in the XML node
       if element_node
-        # If an attribute is given to this function, return it, otherwise return the .text of this node
+        # If an attribute is given to this function, return it, otherwise return
+        # the .text of this node
         if element_attribute_name
           element_attribute = element_node.attribute(element_attribute_name)
           if element_attribute
@@ -54,6 +63,8 @@ module Fluent::Plugin
     end
 
     def event_level(level)
+      # Translate the numeric Level string into the correct readable string; if
+      # unavailable, revert to the numeric value
       case level
         when "0"
           "LogAlways"
@@ -76,7 +87,6 @@ module Fluent::Plugin
       #log.debug("WinevtXMLparser::parse()")
 
       record = {}
-      #record[:_test_] = "This is a test"
       xml_doc = Nokogiri::XML(text)
 
       system_xml_nodeset = xml_doc/'Event'/'System'
@@ -90,11 +100,12 @@ module Fluent::Plugin
           eventID = event_id(eventRawID, eventRawQualifier)
         end
 
-        # Extract other values for a brief summary 'message'
+        # Extract other values for a brief summary 'message' and timestamp
         eventSource  = event_element(system_xml_nodeset, "Provider", "Name")
         eventLevel   = event_level(event_element(system_xml_nodeset, "Level"))
         eventTask    = event_element(system_xml_nodeset, "Task")
         eventChannel = event_element(system_xml_nodeset, "Channel")
+        eventTime    = event_element(system_xml_nodeset, "TimeCreated", "SystemTime")
 
         # Store all values as the record hash
         record[prefix(name:"ID", system:true)]                           = eventID
@@ -107,7 +118,7 @@ module Fluent::Plugin
         record[prefix(name:"Task", system:true)]                         = eventTask
         record[prefix(name:"Opcode", system:true)]                       = event_element(system_xml_nodeset, "Opcode")
         record[prefix(name:"Keywords", system:true)]                     = event_element(system_xml_nodeset, "Keywords")
-        record[prefix(name:"TimeCreated", system:true)]                  = event_element(system_xml_nodeset, "TimeCreated", "SystemTime")
+        record[prefix(name:"TimeCreated", system:true)]                  = eventTime
         record[prefix(name:"RecordID", system:true)]                     = event_element(system_xml_nodeset, "EventRecordID")
         record[prefix(name:"CorrelationActivityID", system:true)]        = event_element(system_xml_nodeset, "Correlation", "ActivityID")
         record[prefix(name:"CorrelationRelatedActivityID", system:true)] = event_element(system_xml_nodeset, "Correlation", "RelatedActivityID")
@@ -123,11 +134,6 @@ module Fluent::Plugin
 
         # Extract 'EventData' sub-fields unique to each event-type
         if @parse_eventdata
-          # ALT: This alternative code would nest the EventData inside a hash.
-          #      However, there really isn't a compelling reason to do so at this
-          #      time.
-          # ALT: Add an empty hash
-          # ALT: record["EventData".prepend(date_prefix)] = {}
           eventdata_xml_nodeset = xml_doc/'Event'/'EventData'
           if eventdata_xml_nodeset
             # Loop through each child of the 'EventData' NodeSet
@@ -136,8 +142,6 @@ module Fluent::Plugin
               if element_name_attribute
                 # Record each 'Data' value by it's 'Name' attribute
                 record[prefix(name:element_name_attribute.text, data:true)] = element.text
-                # ALT: For each child under EventData, append to the EventData hash
-                # ALT: record["EventData"][data["Name"]] = data.text
               else
                 log.error("WinevtXMLparser::parse() Invalid 'Name' element_name_attribute")
               end
@@ -147,8 +151,13 @@ module Fluent::Plugin
           end
         end
   
-        # TODO -- Shouldn't this time value be based on 'TimeCreated' as specified in the EVTX record?
-        time = @estimate_current_event ? Fluent::EventTime.now : nil
+        # Parse 'TimeCreated/SystemTime for this record's timestamp.
+        time = @time_parser.parse(eventTime)
+        if !time
+          # If parsing failes, use 'now' as the record timestamp
+          log.warn("WinevtXMLparser::parse() Unable to parse 'TimeCreated/SystemTime'; using 'Fluent::EventTime.now' instead.")
+          time = Fluent::EventTime.now
+        end
 
         yield time, record
       else
