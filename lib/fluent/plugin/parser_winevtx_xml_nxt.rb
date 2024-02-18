@@ -42,10 +42,12 @@ module Fluent::Plugin
         if element_attribute_name
           element_attribute = element_node.attribute(element_attribute_name)
           if element_attribute
-            return element_attribute.text
+            # Drop "blank" entries containing only a '-'
+            if element_attribute.text != "-" then element_attribute.text else nil end
           end
         else
-          return element_node.text
+            # Drop "blank" entries containing only a '-'
+          if element_node.text != "-" then element_node.text else nil end
         end
       else
         log.error("WinevtXMLparser::event_element() Invalid element_node")
@@ -140,8 +142,11 @@ module Fluent::Plugin
             eventdata_xml_nodeset.children.each do |element|
               element_name_attribute = element.attribute("Name")
               if element_name_attribute
-                # Record each 'Data' value by it's 'Name' attribute
-                record[prefix(name:element_name_attribute.text, data:true)] = element.text
+                # Drop "blank" entries containing only a '-'
+                if element.text != "-" 
+                  # Record each 'Data' value by it's 'Name' attribute
+                  record[prefix(name:element_name_attribute.text, data:true)] = element.text
+                end
               else
                 log.error("WinevtXMLparser::parse() Invalid 'Name' element_name_attribute")
               end
