@@ -1,56 +1,32 @@
-# fluent-plugin-parser-winevtx-xml-nxt
+# fluent-plugin-winevtx-xml-nxt
 
-[![Build status](https://ci.appveyor.com/api/projects/status/eb0capv0q70u381f/branch/master?svg=true)](https://ci.appveyor.com/project/fluent/fluent-plugin-parser-winevt-xml/branch/master)
-[![Build Status](https://travis-ci.org/fluent/fluent-plugin-parser-winevt_xml.svg?branch=master)](https://travis-ci.org/fluent/fluent-plugin-parser-winevt_xml)
-
-## Component
-
-### Fluentd Parser plugin for XML rendered Windows EventLogs
+## Next-Gen Fluentd parser plugin to parse XML rendered Windows EventLogs
 
 [Fluentd](https://www.fluentd.org/) plugin to parse XML rendered Windows Event Logs.
 
+Updated to process all 'EventData' fields. Also update error/type checking to process more cleanly.
+
 ### Installation
 
-```
-gem install fluent-plugin-parser-winevtx-xml-nxt
-```
-
-## Configuration
-
-### parser-winevtx-xml-nxt
+### Configuration
 
 ```aconf
 <parse>
-  @type winevtx-xml-nxt
-  preserve_qualifiers true
+  @type winevtx_xml_nxt
+  parse_eventdata true
+  system_prefix   "event"
+  data_prefix     "eventData"
 </parse>
 ```
 
-#### preserve_qualifiers
+#### config_param :parse_eventdata, :bool,   default: true
 
-Preserve Qualifiers key instead of calculating actual EventID with Qualifiers. Default is `true`.
+Do you want to parse event-specific data contained within the EVTX are 'EventData'?
 
-### parser-winevtx-sax-nxt
+#### config_param :system_prefix,   :string, default: "event"
 
-This plugin is a bit faster than `winevtx-xml-nxt`.
+Add a prefix to Field names found within EVTX-standard 'System'; useful for segregating field and identifying which came from the EVTX record
 
-```aconf
-<parse>
-  @type winevtx-sax-nxt
-  preserve_qualifiers true
-</parse>
-```
+#### config_param :data_prefix,     :string, default: "eventData"
 
-#### preserve_qualifiers
-
-Preserve Qualifiers key instead of calculating actual EventID with Qualifiers. Default is `true`.
-
-## Copyright
-
-### Copyright
-
-Copyright(C) 2019- Hiroshi Hatake, Masahiro Nakagawa
-
-### License
-
-Apache License, Version 2.0
+Add a prefix to field names found within 'EventData'

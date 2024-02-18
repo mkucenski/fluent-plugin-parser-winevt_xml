@@ -7,8 +7,8 @@ Gem::Specification.new do |spec|
   spec.authors = "Matt K."
   spec.email   = ""
 
-  spec.summary       = "Next-Gen Fluentd parser plugin to parse XML rendered windows event log."
-  spec.description   = "Next-Gen Fluentd parser plugin to parse XML rendered windows event log."
+  spec.summary       = "Next-Gen Fluentd parser plugin to parse XML rendered Windows EventLogs"
+  spec.description   = "Next-Gen Fluentd parser plugin to parse XML rendered Windows EventLogs"
   spec.homepage      = "https://github.com/mkucenski/fluent-plugin-parser-winevt_xml"
   spec.license       = "Apache-2.0"
 
